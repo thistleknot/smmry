@@ -189,21 +189,22 @@ def add_words_to_bst(word_bst: Bst, l: LinkedList, synonyms: Dict[str, str], irr
 
         for i, char in enumerate(current_node.data):
             if char == ' ':
-                word = current_node.data[curr_word_start:curr_word_start + curr_word_len]
-                word = word[0].lower() + word[1:]
-                
-                if word in synonyms:
-                    word = synonyms[word]
-                elif word in irreg_nouns:
-                    word = irreg_nouns[word]
-
-                if word_bst.add(word, curr_word_len) == 0:
-                    del(word)
+                score = word_bst.get_score(current_node.data[curr_word_start:curr_word_start + curr_word_len], curr_word_len)
+                if score > 1:
+                    current_node.score += score
 
                 curr_word_start = i + 1
                 curr_word_len = 0
             else:
-                curr_word_len += 1
+                if char.isalnum():
+                    curr_word_len += 1
+
+        # Compute the score for the last word of each sentence:
+
+        if curr_word_len > 0:
+            score = word_bst.get_score(current_node.data[curr_word_start:curr_word_start + curr_word_len], curr_word_len)
+            if score > 1:
+                current_node.score += score
 
         current_node = current_node.link
 
@@ -244,7 +245,7 @@ def get_rid_of_simples(word_bst: Bst, simples: List[str]):
             node.score = 0
 
 def main(filename: str, num_sentences: int) -> None:
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding='utf-8') as f:  # Add encoding='utf-8' here
         text_buffer = f.read()
 
     text_buffer = strip_newlines_tabs(text_buffer)
